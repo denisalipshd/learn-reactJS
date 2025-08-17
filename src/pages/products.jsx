@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "../components/Elements/Button";
 import CardProduct from "../components/Fragments/CardProduct";
 
@@ -36,12 +36,23 @@ const products = [
 const email = localStorage.getItem("email");
 
 const ProductsPage = () => {
-  const [cart, setCart] = useState([
-    {
-      id: 1,
-      qty: 1,
-    },
-  ]);
+  const [cart, setCart] = useState([]);
+  const [totalPrice, setTotalPrice] = useState(0);
+
+  useEffect(() => {
+    setCart(JSON.parse(localStorage.getItem("cart")) || []);
+  }, []);
+
+  useEffect(() => {
+    if (cart.length > 0) {
+      const sum = cart.reduce((acc, item) => {
+        const product = products.find((p) => p.id === item.id);
+        return acc + product.price * item.qty;
+      }, 0);
+      setTotalPrice(sum);
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+  }, [cart]);
 
   const handleLogout = () => {
     localStorage.removeItem("email");
@@ -129,15 +140,10 @@ const ProductsPage = () => {
                   Grand Total
                 </td>
                 <td className="px-4 py-2 text-right">
-                  {cart
-                    .reduce((acc, item) => {
-                      const product = products.find((p) => p.id === item.id);
-                      return acc + product.price * item.qty;
-                    }, 0)
-                    .toLocaleString("id-ID", {
-                      style: "currency",
-                      currency: "IDR",
-                    })}
+                  {totalPrice.toLocaleString("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                  })}
                 </td>
               </tr>
             </tfoot>
