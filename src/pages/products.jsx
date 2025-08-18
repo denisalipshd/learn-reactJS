@@ -1,62 +1,40 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Button from "../components/Elements/Button";
 import CardProduct from "../components/Fragments/CardProduct";
-
-const products = [
-  {
-    id: 1,
-    name: "Nike Shoes",
-    image: "/images/shoes-1.jpg",
-    price: 100,
-    description: `Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque
-            officia excepturi reprehenderit, quidem dolorum aliquam dicta quae
-            dolores nobis nostrum fugiat blanditiis aspernatur? Natus sunt
-            possimus doloribus placeat, eos dignissimos.`,
-  },
-  {
-    id: 2,
-    name: "Adidas Shoes",
-    image: "/images/shoes-1.jpg",
-    price: 200,
-    description: `lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque
-            officia excepturi reprehenderit, quidem dolorum aliquam dicta quae
-            dolores nobis nostrum fugiat blanditiis aspernatur? Natus sunt`,
-  },
-  {
-    id: 3,
-    name: "Jordan Shoes",
-    image: "/images/shoes-1.jpg",
-    price: 1000000,
-    description: `lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque
-            officia excepturi reprehenderit, quidem dolorum aliquam dicta quae
-            dolores nobis nostrum fugiat blanditiis aspernatur? Natus sunt`,
-  },
-];
-
-const email = localStorage.getItem("email");
+import { getProducts } from "../services/products.services";
+import useLogin from "../hooks/useLogin";
 
 const ProductsPage = () => {
   const [cart, setCart] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [products, setProducts] = useState([]);
+  const username = useLogin();
 
   useEffect(() => {
     setCart(JSON.parse(localStorage.getItem("cart")) || []);
   }, []);
 
   useEffect(() => {
-    if (cart.length > 0) {
-      const sum = cart.reduce((acc, item) => {
-        const product = products.find((p) => p.id === item.id);
-        return acc + product.price * item.qty;
-      }, 0);
-      setTotalPrice(sum);
-      localStorage.setItem("cart", JSON.stringify(cart));
-    }
-  }, [cart]);
+    getProducts((data) => setProducts(data));
+  }, [products]);
+
+  useEffect(
+    () => {
+      if (products.length > 0 && cart.length > 0) {
+        const sum = cart.reduce((acc, item) => {
+          const product = products.find((p) => p.id === item.id);
+          return acc + product.price * item.qty;
+        }, 0);
+        setTotalPrice(sum);
+        localStorage.setItem("cart", JSON.stringify(cart));
+      }
+    },
+    [cart],
+    [products]
+  );
 
   const handleLogout = () => {
-    localStorage.removeItem("email");
-    localStorage.removeItem("password");
+    localStorage.removeItem("token");
     window.location.href = "/login";
   };
 
@@ -72,10 +50,20 @@ const ProductsPage = () => {
     }
   };
 
+  const totalPriceRef = useRef(null);
+
+  useEffect(() => {
+    if (cart.length > 0) {
+      totalPriceRef.current.style.display = "table-row";
+    } else {
+      totalPriceRef.current.style.display = "none";
+    }
+  }, [cart]);
+
   return (
     <>
       <div className="flex justify-end items-center h-15 bg-blue-600 text-white px-10">
-        {email}
+        {username}
         <Button classname="ml-5 bg-black" onClick={handleLogout}>
           Logout
         </Button>
@@ -83,19 +71,20 @@ const ProductsPage = () => {
       <div className="flex justify-center py-5 px-10">
         {/* rendering list products */}
         <div className="w-4/3 flex flex-wrap gap-6">
-          {products.map((product) => (
-            <CardProduct key={product.id}>
-              <CardProduct.Header image={product.image} />
-              <CardProduct.Body name={product.name}>
-                {product.description}
-              </CardProduct.Body>
-              <CardProduct.Footer
-                price={product.price}
-                id={product.id}
-                handleAddToCart={handleAddToCart}
-              />
-            </CardProduct>
-          ))}
+          {products.length > 0 &&
+            products.map((product) => (
+              <CardProduct key={product.id}>
+                <CardProduct.Header image={product.image} />
+                <CardProduct.Body name={product.title.substring(0, 20) + "..."}>
+                  {product.description.substring(0, 100)}...
+                </CardProduct.Body>
+                <CardProduct.Footer
+                  price={product.price}
+                  id={product.id}
+                  handleAddToCart={handleAddToCart}
+                />
+              </CardProduct>
+            ))}
         </div>
         <div className="w-2/3">
           <h1 className="text-2xl text-blue-600 font-bold mb-3">Cart</h1>
@@ -109,40 +98,40 @@ const ProductsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {cart.map((item, index) => {
-                const product = products.find((p) => p.id === item.id);
-                return (
-                  <tr
-                    key={product.id}
-                    className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  >
-                    <td className="px-4 py-2">{product.name}</td>
-                    <td className="px-4 py-2 text-right">
-                      {product.price.toLocaleString("id-ID", {
-                        style: "currency",
-                        currency: "IDR",
-                      })}
-                    </td>
-                    <td className="px-4 py-2 text-center">{item.qty}</td>
-                    <td className="px-4 py-2 text-right">
-                      {(item.qty * product.price).toLocaleString("id-ID", {
-                        style: "currency",
-                        currency: "IDR",
-                      })}
-                    </td>
-                  </tr>
-                );
-              })}
+              {products.length > 0 &&
+                cart.map((item) => {
+                  const product = products.find((p) => p.id === item.id);
+                  return (
+                    <tr key={product.id}>
+                      <td className="px-4 py-2">
+                        {product.title.substring(0, 20)}...
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        {product.price.toLocaleString("us-en", {
+                          style: "currency",
+                          currency: "USD",
+                        })}
+                      </td>
+                      <td className="px-4 py-2 text-center">{item.qty}</td>
+                      <td className="px-4 py-2 text-right">
+                        {(item.qty * product.price).toLocaleString("us-en", {
+                          style: "currency",
+                          currency: "USD",
+                        })}
+                      </td>
+                    </tr>
+                  );
+                })}
             </tbody>
             <tfoot className="bg-gray-100 font-bold">
-              <tr>
+              <tr ref={totalPriceRef}>
                 <td colSpan="3" className="px-4 py-2 text-right">
                   Grand Total
                 </td>
                 <td className="px-4 py-2 text-right">
-                  {totalPrice.toLocaleString("id-ID", {
+                  {totalPrice.toLocaleString("us-en", {
                     style: "currency",
-                    currency: "IDR",
+                    currency: "USD",
                   })}
                 </td>
               </tr>

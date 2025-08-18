@@ -14,7 +14,11 @@ const Header = (props) => {
   return (
     <div>
       <a href="#">
-        <img src={image} alt="Shoes" className="p-8 w-sm rounded-t-lg" />
+        <img
+          src={image}
+          alt="Shoes"
+          className="p-8 max-w-sm rounded-t-lg h-60 w-full object-cover"
+        />
       </a>
     </div>
   );
@@ -39,9 +43,12 @@ const Footer = (props) => {
   return (
     <div className="px-5 py-5 flex justify-between items-center">
       <span className="font-bold text-xl text-black tracking-tight">
-        {price.toLocaleString("id-ID", { style: "currency", currency: "IDR" })}
+        {price.toLocaleString("us-en", { style: "currency", currency: "USD" })}
       </span>
-      <Button classname="bg-blue-600 text-sm" onClick={() => handleAddToCart(id)}>
+      <Button
+        classname="bg-blue-600 text-sm"
+        onClick={() => handleAddToCart(id)}
+      >
         Add To Cart
       </Button>
     </div>
