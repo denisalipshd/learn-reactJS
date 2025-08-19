@@ -1,8 +1,12 @@
 import useLogin from "../hooks/useLogin";
 
 const ProfilPage = () => {
-  useLogin();
-  return <div>profil</div>;
+  const username = useLogin();
+  return (
+    <div>
+      profil <br /> username : {username}
+    </div>
+  );
 };
 
 export default ProfilPage;

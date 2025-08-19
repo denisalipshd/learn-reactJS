@@ -8,6 +8,10 @@ import RegisterPage from "./pages/register.jsx";
 import ErrorPage from "./pages/404.jsx";
 import ProductsPage from "./pages/products.jsx";
 import ProfilPage from "./pages/profil.jsx";
+import ProductDetailPage from "./pages/ProductDetail.jsx";
+import { Provider } from "react-redux";
+import store from "./redux/store";
+import Navbar from "./components/Layouts/Navbar.jsx";
 
 const router = createBrowserRouter([
   {
@@ -31,10 +35,17 @@ const router = createBrowserRouter([
     path: "/profile",
     element: <ProfilPage />,
   },
+  {
+    path: "product/:id",
+    element: <ProductDetailPage />,
+  },
 ]);
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <Provider store={store}>
+      <Navbar />
+      <RouterProvider router={router} />
+    </Provider>
   </StrictMode>
 );
